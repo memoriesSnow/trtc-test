@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画板</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+        }
+        #paint{
+            background:#ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <input type ="button" value ="清除" id ="clear"/>
+        <input type ="button" value ="撤销" id ="back"/>
+        <input type ="color" id ="color"/>
+    </div>
+    <canvas id="paint" width="600px" height="300px">
+
+    </canvas>
+    <div class="tools">
+        <button id="pencil">铅笔</button>
+        <button id="square">矩形</button>
+    </div>
+</body>
+<script>
+    var paint = document.getElementById('paint');
+    var clear = document.getElementById('clear');
+    var back = document.getElementById('back');
+    var color = document.getElementById('color');
+    
+    var ctx = paint.getContext('2d');
+    var flag = false;
+    var canvasL = paint.offsetLeft;
+    var canvasT = paint.offsetTop;
+    console.log('left:'+canvasL);
+    console.log('top:'+canvasT);
+    var canvasH = paint.offsetHeight;
+    var canvasW = paint.offsetWidth;
+    var imgList = [];
+    window.onload = function(){
+        var pencil = document.getElementById('pencil')
+        pencil.onclick = function(){
+            ctx.lineCap = 'round';
+            ctx.lineJion = 'round';
+            paint.onmousedown = function(e){
+                flag = true;
+                ctx.beginPath();
+                ctx.moveTo(e.clientX - canvasL,e.clientY - canvasT)
+                var pic = ctx.getImageData(0,0,canvasW,canvasH)
+                imgList.push(pic) 
+            }
+            paint.onmousemove = function(e){
+                console.log(flag)
+                if(flag){
+                    ctx.lineTo(e.clientX - canvasL, e.clientY - canvasT); 
+                    ctx.stroke();
+                }
+            }
+            paint.onmouseout = function(e){
+                ctx.closePath();
+                flag = false;
+            }
+            paint.onmouseup = function(e){
+                ctx.closePath();
+                flag = false;
+            }
+            clear.onclick = function(){
+                ctx.clearRect(0, 0, canvasW, canvasH);
+                imgList = [];
+            }
+            back.onclick = function(){
+                if (imgList.length > -1) {
+                    ctx.putImageData(imgList.pop(), 0, 0); //删除图像数组最后一位
+                }
+            }
+            color.onchange = function(){
+                ctx.strokeStyle = this.value;
+            }
+            setInterval(function(){
+                console.log(imgList)
+            },1000)
+        }
+        var square = document.getElementById('square')
+        square.onclick = function(){
+            var x,y;
+            paint.onmousedown = function(e){
+                x = e.clientX;
+                y = e.clientY;
+                console.log("x:"+x+"y:"+y)
+                flag = true;
+                ctx.beginPath();
+                ctx.moveTo(e.clientX - canvasL,e.clientY - canvasT)
+                var pic = ctx.getImageData(0,0,canvasW,canvasH)
+                imgList.push(pic) 
+            }
+            paint.onmousemove = function(e){
+                console.log(flag)
+                if(flag){
+                    ctx.rect(x,y,e.clientX-x,e.clientY-y)
+                    ctx.stroke();
+                }
+            }
+            paint.onmouseout = function(e){
+                ctx.closePath();
+                flag = false;
+            }
+            paint.onmouseup = function(e){
+                ctx.closePath();
+                flag = false;
+            }
+            clear.onclick = function(){
+                ctx.clearRect(0, 0, canvasW, canvasH);
+                imgList = [];
+            }
+            back.onclick = function(){
+                if (imgList.length > -1) {
+                    ctx.putImageData(imgList.pop(), 0, 0); //删除图像数组最后一位
+                }
+            }
+            color.onchange = function(){
+                ctx.strokeStyle = this.value;
+            }
+            setInterval(function(){
+                console.log(imgList)
+            },1000)
+        }
+    }
+</script>
+</html>

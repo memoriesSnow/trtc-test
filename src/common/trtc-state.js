@@ -1,0 +1,1 @@
+import TRTCCloud from 'trtc-electron-sdk'

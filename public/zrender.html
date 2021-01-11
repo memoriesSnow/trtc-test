@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zrender</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+        }
+        .container{
+            height:100vh;
+            width:100%;
+        }
+        .zrender{
+            height:100%;
+            width:100%;
+            background:#ddd;
+        }
+        button{
+            padding:3px 5px;
+        }
+        #text_input{
+            position:absolute;
+            /* display:none; */
+            top:0;
+            left:0;
+            background:transparent;
+            display:flex;
+            justify-content: center;
+            align-items: center;
+        }
+        textarea{
+            outline:blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id ="tools">
+            <!-- 路径 -->
+            <button id ="path" style="background-color:#ccc">路径</button>
+            <!-- 线段 -->
+            <button id ="line" style="background:red">线段</button>
+            <!-- 矩形 -->
+            <button id ="rect" style="background:#2c2">矩形</button>
+            <!-- 圆形 -->
+            <button id ="circle" style="background:#22c;color:#fff;">圆形</button>
+            <!-- 椭圆 -->
+            <button id ="ellipse" style="background:#222;color:#fff;">椭圆</button>
+            <!-- 箭头 -->
+            <button id ="arrow" style="background:#222;color:#fff;">箭头</button>
+            <!-- 文字 -->
+            <button id ="text" style="background:#222;color:#fff;">文字</button>
+
+            <!-- 颜色 -->
+            颜色：<input id ="color" type ="color"/>
+            粗细：<input id ="lineWidth" type ="range" value ='5' min ='2' max='20'/>
+            字号：<select id ="fontsize">
+                <option>12</option>
+                <option>16</option>
+                <option>20</option>
+                <option>24</option>
+            </select>
+            <button id ="turnback">撤销</button>
+            <button id ="clear">清屏</button>
+        </div>
+        <div id ="zrender" class="zrender">
+            
+        </div>
+        <div id="text_input" >
+            <textarea style="resize:none;"></textarea>
+            <button id = "yes">确认</button>
+            <button id = "no">取消</button>
+        </div>
+        
+    </div>
+</body>
+<script type="text/JavaScript" src="../node_modules/zrender/dist/zrender.js"></script>
+<script>
+    console.info(zrender);
+/*  初始化zrender */
+    var container = document.getElementById('zrender')
+    var zr = zrender.init(container);
+    console.log(zr);
+/*  拖动事件开关 */
+    var flag = false;
+/*  工具 */
+    var tool = null;
+    var tool_path = document.getElementById('path');
+    var tool_line = document.getElementById('line');
+    var tool_rect = document.getElementById('rect');
+    
+    //  椭圆即可实现圆圈，先不用这个
+    // var circle = document.getElementById('circle');
+    var tool_ellipse = document.getElementById('ellipse');
+    var tool_arrow = document.getElementById('arrow');
+    var tool_text = document.getElementById('text');
+
+
+    tool_path.onclick = ()=>{tool = 'path'};
+    tool_line.onclick = ()=>{tool = 'line'};
+    tool_rect.onclick = ()=>{tool = 'rect'};
+    
+    // circle.onclick = ()=>{tool = 'circle'};
+    tool_ellipse.onclick = ()=>{tool = 'ellipse'};
+    tool_arrow.onclick = ()=>{tool = 'arrow'};
+    tool_text.onclick = ()=>{tool = 'text'};
+
+    var conLeft = container.offsetLeft;
+    var conTop = container.offsetTop; 
+/* 起点的x,y坐标 */
+    var originX,originY;
+
+    var path,line,rect,circle,ellipse,arrow;
+
+/*  按下鼠标就已经绘制了图案 */
+    container.onmousedown = function(e){
+    /* 颜色、线宽 */
+        var color = document.getElementById('color').value;
+        var lineWidth = document.getElementById('lineWidth').value;
+    /* 起点的x,y坐标 */
+        originX = e.clientX - conLeft;
+        originY = e.clientY - conTop;
+        flag = true;
+        console.log(tool);
+        switch(tool) {
+            case 'path':
+                path = new zrender.Path({
+                    x:originX,
+                    y:originY,
+                    style: {
+                        fill: color,
+                        lineWidth:lineWidth
+                    }
+                })
+                console.log(path);
+            break;
+            case 'line':
+                line = new zrender.Line({
+                    shape: {
+                        x1:originX,
+                        y1:originY,
+                        x2:originX,
+                        y2:originY,
+                    },
+                    style: {
+                        stroke: color,
+                        lineWidth:lineWidth
+                    }
+                })
+                zr.add(line);
+            break;
+            case 'rect':
+                rect = new zrender.Rect({
+                    shape: {
+                        x:originX,
+                        y:originY,
+                        width:0,
+                        height:0
+                    },
+                    style: {
+                        fill: 'none',
+                        stroke: color,
+                        lineWidth:lineWidth
+                    }
+                })
+                zr.add(rect);
+            break;
+            case 'ellipse':
+                ellipse = new zrender.Ellipse({
+                    shape: {
+                        cx: 0,
+                        cy: 0,
+                        rx: 0,
+                        ry: 0
+                    },
+                    style: {
+                        fill: 'none',
+                        stroke :color,
+                        lineWidth:lineWidth
+                    },
+                    draggable: true
+                })
+                zr.add(ellipse);
+                console.log(zr)
+            break;
+            case 'arrow':
+                arrow = new zrender.Path(zrender.path.createFromString());
+            break;
+        }
+    }
+
+/*  移动鼠标改变图案属性 */
+    container.onmousemove = function(e){
+        if(flag){
+            var x = e.clientX - conLeft;
+            var y = e.clientY - conTop;
+            var deltaX = x - originX;
+            var deltaY = y - originY;
+            switch(tool) {
+                case 'path':
+                    console.log('path')
+                    path.attr('x',x);
+                    path.attr('y',y);
+                break;
+                case 'line':
+                    line.attr('shape',{
+                        x2:x,
+                        y2:y
+                    })
+                break;
+                case 'rect':
+                    rect.attr('shape',{
+                        width:deltaX,
+                        height:deltaY
+                    })
+                break;
+                case 'ellipse':
+                    ellipse.attr('shape',{
+                        cx: deltaX/2 + originX,
+                        cy: deltaY/2 + originY,
+                        rx: deltaX/2,
+                        ry: deltaY/2
+                    })
+                break;
+            }
+        }
+    }
+
+/*  松开鼠标保留当前图案 */
+    container.onmouseup = function(e){
+        flag = false;
+        console.log(zr);
+    }
+    container.onmoustout = function(){
+        flag = false;
+    }
+/*  文字输入 */
+    container.onclick = function(e){
+        var x = e.clientX;
+        var y = e.clientY;
+        var tool_input = document.getElementById('text_input');
+        var textarea = document.getElementsByTagName('textarea')[0];
+        var color = document.getElementById('color');
+        var font = document.getElementById('fontsize');
+
+        var yes = document.getElementById('yes');
+        var no = document.getElementById('no');
+
+        if(tool == 'text'){
+            tool_input.style.top = y + 'px';
+            tool_input.style.left = x + 'px';
+            tool_input.style.display = 'flex';
+            textarea.style.color = color.value;
+            textarea.style.fontSize = font.value +'px';
+        }
+        color.onchange = function(){
+            textarea.style.color = color.value;
+        }
+        font.onchange = function(){
+            textarea.style.fontSize = font.value +'px';
+        }
+        yes.onclick = function(){
+            console.log('yes')
+        }
+        no.onclick = function(){
+            console.log('no')
+        }
+    }
+/*  撤销 */
+    var turnback = document.getElementById('turnback');
+    turnback.onclick = function(){
+        var paintStorage = zr.storage._roots;
+        var displayList = zr.storage._displayList;
+        zr.remove(paintStorage[paintStorage.length-1])
+
+        console.log(zr);
+    }
+
+/*  清屏 */
+    var clear = document.getElementById('clear');
+    clear.onclick = function(){
+        console.log(zr);
+        zr.clear();
+    }
+</script>
+</html>
